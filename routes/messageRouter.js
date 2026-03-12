@@ -1,7 +1,7 @@
 const { Router } = require("express");
 const messageRouter = Router();
 
-const messageController = require("../controllers/messageController")
+const messageController = require("../controllers/messageController");
 
 messageRouter.route("/")
     .post(messageController.postMessage)
