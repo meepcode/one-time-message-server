@@ -1,4 +1,5 @@
 const { validationResult, matchedData, check } = require("express-validator");
+const messageService = require("../services/messageService");
 
 const postMessageValidator = [
     check("name").trim()
@@ -13,7 +14,7 @@ const postMessageValidator = [
 
 exports.postMessage = [
     postMessageValidator,
-    (req, res) => {
+    async (req, res) => {
         let errors = validationResult(req);
         if (!errors.isEmpty()) {
             let errorsArr = errors.array();
@@ -35,12 +36,12 @@ exports.postMessage = [
 
         const { name, email, message } = matchedData(req);
 
-        // TODO: Implement services function to create and return token
+        const token = await messageService.createToken(name, email, message);
 
         res.status(200).json({
             success: true,
             error: null,
-            token: crypto.randomUUID()
+            token: token
         })
     }
 ];
