@@ -10,6 +10,8 @@ const messageRouter = require("../routes/messageRouter");
 app.use(express.json());
 app.use("/message", messageRouter);
 
+const database = "mongodb://localhost:27017/bushman-test"
+
 const checkNoErrors = (res) => { // Verifies that there are no errors received from the server
     const { success, error } = res.body;
     if (!success || error) { // Even if success is true, but there's an error message, something went wrong and vice-versa
@@ -38,7 +40,7 @@ const checkThrowsErrors = (res, expectedErrors) => {
 describe('POST /message with valid parameters', () => {
 
     afterEach(async () => {
-        const client = new MongoClient("mongodb://localhost:27017/bushman-test");
+        const client = new MongoClient(database);
         await client.connect();
         await client.db().dropDatabase();
         await client.close();
@@ -101,6 +103,60 @@ describe('POST /message with valid parameters', () => {
         expect(res.status).toEqual(200)
 
     });
+
+    it("saves the name, message, and email to the server", async () => {
+        await request(app)
+            .post("/message")
+            .type("json")
+            .send({
+                name: "AJ B.",
+                email: "email@example.com",
+                message: "Hello, World!"
+            })
+        
+        const client = new MongoClient(database);
+        try {
+            await client.connect();
+
+            const { name, email, message } = await client.db().collection("messages").findOne();
+
+            expect(name).toEqual("AJ B.");
+            expect(email).toEqual("email@example.com");
+            expect(message).toEqual("Hello, World!");
+        } catch (error) {
+            await client.close();
+            throw error;
+        }
+
+        await client.close();
+    })
+
+    it("sanitizes input", async () => {
+        await request(app)
+            .post("/message")
+            .type("json")
+            .send({
+                name: "<b>AJ B.</b>&nbsp;",
+                email: "email@example.com",
+                message: "<script>console.log(\"You have been hacked!\");</script>\\"
+            })
+        
+        const client = new MongoClient(database);
+        try {
+            await client.connect();
+
+            const { name, email, message } = await client.db().collection("messages").findOne();
+
+            expect(name).toEqual("&lt;b&gt;AJ B.&lt;&#x2F;b&gt;&amp;nbsp;");
+            expect(email).toEqual("email@example.com");
+            expect(message).toEqual("&lt;script&gt;console.log(&quot;You have been hacked!&quot;);&lt;&#x2F;script&gt;&#x5C;");
+        } catch (error) {
+            await client.close();
+            throw error;
+        }
+
+        await client.close();
+    })
 })
 
 describe('POST /message with invalid parameters', () => {

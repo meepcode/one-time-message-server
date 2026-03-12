@@ -3,13 +3,15 @@ const messageService = require("../services/messageService");
 
 const postMessageValidator = [
     check("name").trim()
-        .exists({ values: 'falsy' }).withMessage("Name required for leaving a message"),
+        .exists({ values: 'falsy' }).withMessage("Name required for leaving a message")
+        .escape(),
     check("email").trim()
         .exists({ values: 'falsy' }).withMessage("Email address required for leaving a message").bail()
         .isEmail().withMessage("Email address must be valid"),
     check("message")
         .exists({ values: 'falsy' }).withMessage("Message field required").bail()
         .isLength({ max: 250 }).withMessage("Message must be at most 250 characters")
+        .escape()
 ]
 
 exports.postMessage = [
