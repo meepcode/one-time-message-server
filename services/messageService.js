@@ -1,6 +1,6 @@
 const { MongoClient } = require("mongodb");
 
-let database = process.env.NODE_ENV == "test" ? "mongodb://localhost:27017/bushman-test" : "mongodb://localhost:27017/bushman-db"
+let database = `mongodb://localhost:27017/bushman-${process.env.NODE_ENV}`
 
 exports.createToken = async (name, email, message) => {
     let token = crypto.randomUUID();
@@ -9,7 +9,7 @@ exports.createToken = async (name, email, message) => {
 
     try {
         await client.connect();
-        const db = client.db("bushman-test");
+        const db = client.db();
         await db.collection("messages").insertOne({
             name: name,
             email: email,
