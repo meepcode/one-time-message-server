@@ -26,3 +26,31 @@ exports.createToken = async (name, email, message) => {
 
     return token;
 }
+
+exports.retrieveData = async (token) => {
+    let client = new MongoClient(database);
+    await client.connect();
+
+    let error;
+    const document = await client.db().collection("messages").findOne({ token: token });
+    if (!document) {
+        error = "Token not found in database"
+    } else if (document.used) {
+        error = "Token already used"
+    } else if (Date.now() - document.creationTime > 24 * 60 * 60 * 1000) {
+        error = "Token expired after 24 hours"
+    }
+
+    if (error) {
+        await client.close();
+        return { error }
+    }
+
+    await client.db().collection("messages").updateOne(document, { $set: { used: true }})
+    
+    await client.close()
+
+    let { name, email, message } = document;
+
+    return { name, email, message };
+}

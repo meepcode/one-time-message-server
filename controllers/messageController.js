@@ -1,4 +1,4 @@
-const { validationResult, matchedData, check } = require("express-validator");
+const { validationResult, matchedData, check, param } = require("express-validator");
 const messageService = require("../services/messageService");
 
 const postMessageValidator = [
@@ -48,6 +48,52 @@ exports.postMessage = [
     }
 ];
 
-exports.getMessage = (req, res) => {
-    res.send(`GET received at /message, token: ${req.params.token}`)
+const returnGetMessageError = (res, errorsArr) => {
+        let error = ""
+
+        for (let i = 0; i < errorsArr.length; i++) {
+            if (i > 0) {
+                error += "\n";
+            }
+            error += errorsArr[i];
+        }
+
+        return res.status(400).json({
+            success: false,
+            error: error,
+            name: null,
+            email: null,
+            message: null,
+        })
 }
+
+const getMessageValidator = [
+    param("token")
+        .isUUID().withMessage("Token in incorrect format (must be UUID)")
+]
+
+exports.getMessage = [
+    getMessageValidator,
+    async (req, res) => {
+        let errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return returnGetMessageError(res, errors.array().map((error) => error.msg));
+        }
+
+        const { token } = matchedData(req);
+
+        const result = await messageService.retrieveData(token);
+
+        if (result.error) {
+            return returnGetMessageError(res, [result.error])
+        }
+
+        return res.status(200).json({
+            success: true,
+            error: null,
+            name: result.name,
+            email: result.email,
+            message: result.message
+        })
+    }
+]
