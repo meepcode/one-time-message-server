@@ -70,14 +70,6 @@ afterEach(async () => {
 describe("GET /message/:token with valid token", () => {
     it("retrieves name, email, and message from server", async () => {
 
-        const client = new MongoClient(database)
-        await client.connect();
-
-        const document = await client.db().collection("messages").find().toArray();
-        console.log(document);
-
-        await client.close();
-
         const res = await request(app)
             .get("/message/738adea7-7311-4c24-b77a-a7ecf0651570");
         
