@@ -1,6 +1,22 @@
 const { validationResult, matchedData, check, param } = require("express-validator");
 const messageService = require("../services/messageService");
 
+const returnError = (res, errors, payload) => {
+    let error = ""
+
+    for (let i = 0; i < errors.length; i++) {
+        if (i > 0) {
+            error += "\n";
+        }
+        error += errors[i];
+    }
+
+    payload.success = false;
+    payload.error = error;
+
+    return res.status(400).json(payload);
+}
+
 const postMessageValidator = [
     check("name").trim()
         .exists({ values: 'falsy' }).withMessage("Name required for leaving a message")
@@ -19,53 +35,20 @@ exports.postMessage = [
     async (req, res) => {
         let errors = validationResult(req);
         if (!errors.isEmpty()) {
-            let errorsArr = errors.array();
-            let error = ""
-
-            for (let i = 0; i < errorsArr.length; i++) {
-                if (i > 0) {
-                    error += "\n";
-                }
-                error += errorsArr[i].msg;
-            }
-
-            return res.status(400).json({
-                success: false,
-                error: error,
-                token: null
-            })
-        } 
+            return returnError(res, errors.array().map((error) => error.msg), { token: null })
+        }
 
         const { name, email, message } = matchedData(req);
 
         const token = await messageService.createToken(name, email, message);
 
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             error: null,
             token: token
         })
     }
 ];
-
-const returnGetMessageError = (res, errorsArr) => {
-        let error = ""
-
-        for (let i = 0; i < errorsArr.length; i++) {
-            if (i > 0) {
-                error += "\n";
-            }
-            error += errorsArr[i];
-        }
-
-        return res.status(400).json({
-            success: false,
-            error: error,
-            name: null,
-            email: null,
-            message: null,
-        })
-}
 
 const getMessageValidator = [
     param("token")
@@ -76,8 +59,9 @@ exports.getMessage = [
     getMessageValidator,
     async (req, res) => {
         let errors = validationResult(req);
+        let payload = { success: true, error: null, name: null, email: null, message: null }
         if (!errors.isEmpty()) {
-            return returnGetMessageError(res, errors.array().map((error) => error.msg));
+            return returnError(res, errors.array().map((error) => error.msg), payload);
         }
 
         const { token } = matchedData(req);
@@ -85,7 +69,7 @@ exports.getMessage = [
         const result = await messageService.retrieveData(token);
 
         if (result.error) {
-            return returnGetMessageError(res, [result.error])
+            return returnError(res, [result.error], payload)
         }
 
         return res.status(200).json({
