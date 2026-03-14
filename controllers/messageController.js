@@ -20,6 +20,7 @@ const returnError = (res, errors, payload) => {
 const postMessageValidator = [
     check("name").trim()
         .exists({ values: 'falsy' }).withMessage("Name required for leaving a message")
+        .isString().withMessage("Name must be a string")
         .escape(),
     check("email").trim()
         .exists({ values: 'falsy' }).withMessage("Email address required for leaving a message").bail()
