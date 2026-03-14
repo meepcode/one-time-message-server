@@ -28,5 +28,11 @@
   "devDependencies": {
     "jest": "^30.3.0",
     "supertest": "^7.2.2"
+  },
+  "prettier": {
+    "trailingComma": "es5",
+    "tabWidth": 4,
+    "semi": false,
+    "singleQuote": true
   }
 }

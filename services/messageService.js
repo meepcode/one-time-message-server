@@ -1,52 +1,56 @@
-const { MongoClient } = require("mongodb");
+const { MongoClient } = require('mongodb')
 
 let database = `mongodb://localhost:27017/bushman-${process.env.NODE_ENV}`
 
 exports.createToken = async (name, email, message) => {
-    let token = crypto.randomUUID();
+    let token = crypto.randomUUID()
 
-    const client = new MongoClient(database);
+    const client = new MongoClient(database)
 
-    await client.connect();
-    const db = client.db();
-    await db.collection("messages").insertOne({
+    await client.connect()
+    const db = client.db()
+    await db.collection('messages').insertOne({
         name: name,
         email: email,
         message: message,
         token: token,
-        creationTime: new Date()
+        creationTime: new Date(),
     })
 
-    client.close();
+    client.close()
 
-    return token;
+    return token
 }
 
 exports.retrieveData = async (token) => {
-    let client = new MongoClient(database);
-    await client.connect();
+    let client = new MongoClient(database)
+    await client.connect()
 
-    const document = await client.db().collection("messages").findOne({ token: token });
+    const document = await client.db()
+        .collection('messages')
+        .findOne({ token: token })
 
-    let error;
+    let error
     if (!document) {
-        error = "Token not found in database"
+        error = 'Token not found in database'
     } else if (document.used) {
-        error = "Token already used"
+        error = 'Token already used'
     } else if (Date.now() - document.creationTime > 24 * 60 * 60 * 1000) {
-        error = "Token expired after 24 hours"
+        error = 'Token expired after 24 hours'
     }
 
     if (error) {
-        await client.close();
+        await client.close()
         return { error }
     }
 
-    await client.db().collection("messages").updateOne(document, { $set: { used: true }})
-    
+    await client.db()
+        .collection('messages')
+        .updateOne(document, { $set: { used: true } })
+
     await client.close()
 
-    let { name, email, message } = document;
+    let { name, email, message } = document
 
-    return { name, email, message };
+    return { name, email, message }
 }

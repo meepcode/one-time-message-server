@@ -1,12 +1,12 @@
-const { Router } = require("express");
-const messageRouter = Router();
+const { Router } = require('express')
+const messageRouter = Router()
 
-const messageController = require("../controllers/messageController");
+const messageController = require('../controllers/messageController')
 
-messageRouter.route("/")
+messageRouter.route('/')
     .post(messageController.postMessage)
 
-messageRouter.route("/:token")
+messageRouter.route('/:token')
     .get(messageController.getMessage)
 
-module.exports = messageRouter;
+module.exports = messageRouter
