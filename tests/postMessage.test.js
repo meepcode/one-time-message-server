@@ -6,45 +6,14 @@ const { describe, expect, it, beforeEach, afterEach } = require("@jest/globals")
 const { MongoClient } = require("mongodb")
 
 const messageRouter = require("../routes/messageRouter");
+const { checkNoErrors, checkThrowsErrors, database, tearDown } = require("./common");
 
 app.use(express.json());
 app.use("/message", messageRouter);
 
-const database = "mongodb://localhost:27017/bushman-test"
-
-const checkNoErrors = (res) => { // Verifies that there are no errors received from the server
-    const { success, error } = res.body;
-    if (!success || error) { // Even if success is true, but there's an error message, something went wrong and vice-versa
-        let result = "Unexpected error received from server:\n"
-        result += `success = ${success}\n`;
-        result += error ? error : "\"\""
-        throw new Error(result)
-    }
-}
-
-const checkThrowsErrors = (res, expectedErrors) => {
-    const { success, error: errorStr } = res.body;
-    const errors = errorStr.split('\n');
-
-    expect(success).toEqual(false);
-
-    for (const error of errors) {
-        if (!expectedErrors.includes(error)) {
-            throw new Error(`Unexpected error: ${error}`);
-        }
-    }
-    
-    expect(errors.length).toEqual(expectedErrors.length);
-}
-
 describe('POST /message with valid parameters', () => {
 
-    afterEach(async () => {
-        const client = new MongoClient(database);
-        await client.connect();
-        await client.db().dropDatabase();
-        await client.close();
-    })
+    afterEach(tearDown)
 
     it("returns a randomly generated token", async () => {
         const res = await request(app)

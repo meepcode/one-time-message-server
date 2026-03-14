@@ -4,6 +4,7 @@ const app = express();
 const request = require("supertest");
 const { describe, expect, it, beforeEach, afterEach } = require("@jest/globals")
 const { MongoClient } = require("mongodb")
+const { checkNoErrors, checkThrowsErrors, database, tearDown } = require("./common")
 
 const messageRouter = require("../routes/messageRouter");
 
@@ -11,32 +12,6 @@ app.use(express.json());
 app.use("/message", messageRouter);
 
 jest.useFakeTimers({ advanceTimers: true });
-
-let database = `mongodb://localhost:27017/bushman-${process.env.NODE_ENV}`
-
-const checkNoErrors = (res) => { // Verifies that there are no errors received from the server
-    const { success, error } = res.body;
-    if (!success || error) { // Even if success is true, but there's an error message, something went wrong and vice-versa
-        let result = "Unexpected error received from server:\n"
-        result += `success = ${success}\n`;
-        result += error ? error : "\"\""
-        throw new Error(result)
-    }
-}
-
-const checkThrowsErrors = (res, expectedErrors) => {
-    const { success, error: errorStr } = res.body;
-    expect(success).toEqual(false);
-
-    const errors = errorStr.split('\n');
-    for (const error of errors) {
-        if (!expectedErrors.includes(error)) {
-            throw new Error(`Unexpected error: ${error}`);
-        }
-    }
-    
-    expect(errors.length).toEqual(expectedErrors.length);
-}
 
 beforeEach(async () => {
     const client = new MongoClient(database);
@@ -60,12 +35,7 @@ beforeEach(async () => {
     await client.close();
 })
 
-afterEach(async () => {
-    const client = new MongoClient(database);
-    await client.connect();
-    await client.db().dropDatabase();
-    await client.close();
-})
+afterEach(tearDown)
 
 describe("GET /message/:token with valid token", () => {
     it("retrieves name, email, and message from server", async () => {
