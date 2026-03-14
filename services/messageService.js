@@ -7,22 +7,17 @@ exports.createToken = async (name, email, message) => {
 
     const client = new MongoClient(database);
 
-    try {
-        await client.connect();
-        const db = client.db();
-        await db.collection("messages").insertOne({
-            name: name,
-            email: email,
-            message: message,
-            token: token,
-            creationTime: new Date()
-        })
+    await client.connect();
+    const db = client.db();
+    await db.collection("messages").insertOne({
+        name: name,
+        email: email,
+        message: message,
+        token: token,
+        creationTime: new Date()
+    })
 
-    } catch (error) {
-        console.error(error);
-    } finally {
-        client.close();
-    }
+    client.close();
 
     return token;
 }
@@ -31,8 +26,9 @@ exports.retrieveData = async (token) => {
     let client = new MongoClient(database);
     await client.connect();
 
-    let error;
     const document = await client.db().collection("messages").findOne({ token: token });
+
+    let error;
     if (!document) {
         error = "Token not found in database"
     } else if (document.used) {
