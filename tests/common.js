@@ -1,19 +1,14 @@
 const { MongoClient } = require('mongodb')
 
 /**
- * Checks if there were no errors received by the server. If there is, it fails and prints out the errors.
+ * Checks if there were no errors received by the server. Fails otherwise.
  * @param {*} res The response received from the server during testing
  */
 exports.checkNoErrors = (res) => {
     // Verifies that there are no errors received from the server
     const { success, error } = res.body
-    if (!success || error) {
-        // Even if success is true, but there's an error message, something went wrong and vice-versa
-        let result = 'Unexpected error received from server:\n'
-        result += `success = ${success}\n`
-        result += error ? error : '""'
-        throw new Error(result)
-    }
+    expect(success).toEqual(true);
+    expect(error).toBeNull();
 }
 
 /**
@@ -33,7 +28,7 @@ exports.checkThrowsErrors = (res, expectedErrors) => {
         }
     }
 
-    expect(errors.length).toEqual(expectedErrors.length)
+    expect(errors.length).toEqual(expectedErrors.length) // there shouldn't be any expected errors that weren't returned
 }
 
 // Database will generally be bushman-test
