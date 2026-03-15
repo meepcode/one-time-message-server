@@ -11,7 +11,7 @@ app.use('/message', messageRouter)
 
 afterEach(tearDown)
 
-jest.useFakeTimers({ advanceTimers: true })
+jest.useFakeTimers({ advanceTimers: true }) // Mocks the timers but also so that time advances normally even after a mock delay
 
 describe('POST /message then GET /message/:token', () => {
     it('retrieves the request', async () => {
@@ -67,6 +67,7 @@ describe('POST /message then GET /message/:token', () => {
     it('succeeds when making 25 POST and 25 GET requests to save and retrieve data', async () => {
         let tokens = Array(25)
 
+        // 25 post requests
         for (let i = 0; i < 25; i++) {
             const res = await request(app)
                 .post('/message')
@@ -82,6 +83,7 @@ describe('POST /message then GET /message/:token', () => {
             tokens[i] = res.body.token
         }
 
+        // 25 get requests
         for (let i = 0; i < 25; i++) {
             const getRes = await request(app).get('/message/' + tokens[i])
 

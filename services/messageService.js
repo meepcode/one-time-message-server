@@ -2,6 +2,14 @@ const { MongoClient } = require('mongodb')
 
 let database = `mongodb://localhost:27017/bushman-${process.env.NODE_ENV}`
 
+/**
+ * Creates a token to save with the name, email, and message to the database
+ * 
+ * @param {*} name 
+ * @param {*} email 
+ * @param {*} message 
+ * @returns The created token
+ */
 exports.createToken = async (name, email, message) => {
     let token = crypto.randomUUID()
 
@@ -14,7 +22,7 @@ exports.createToken = async (name, email, message) => {
         email: email,
         message: message,
         token: token,
-        creationTime: new Date(),
+        creationTime: new Date(), // To check later if the token has expired
     })
 
     client.close()
@@ -22,6 +30,13 @@ exports.createToken = async (name, email, message) => {
     return token
 }
 
+/**
+ * Retrieves the data corresponding to the particular token.
+ * 
+ * Returns error if: The token is not in the database, the token has already been used in the past, or the token has expired (24 hours after creation)
+ * @param {*} token The token to search for in the database
+ * @returns An error if there's an error, otherwise it returns the name, email, and message corresponding to the token
+ */
 exports.retrieveData = async (token) => {
     let client = new MongoClient(database)
     await client.connect()

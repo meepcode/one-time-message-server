@@ -29,7 +29,7 @@ describe('POST /message with valid parameters', () => {
         expect(checkNoErrors(res))
         expect(res.body.token).toMatch(
             /^([0-9a-f]){8}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){12}$/
-        )
+        ) // While not an exact regex for a UUID (it's slightly too broad), it's good enough for our purposes
         expect(res.status).toEqual(200)
     })
     it('can be repeated without error', async () => {
@@ -56,9 +56,10 @@ describe('POST /message with valid parameters', () => {
             /^([0-9a-f]){8}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){4}-([0-9a-f]){12}$/
         )
         expect(res2.status).toEqual(200)
-        expect(res2.body.token).not.toEqual(res1.body.token) // Tokens should be different
+        expect(res2.body.token).not.toEqual(res1.body.token) // Tokens must be different
     })
     it('works with message of length 250', async () => {
+        // The message can be at most 250, not less than. That's what I'm testing
         const res = await request(app)
             .post('/message')
             .type('json')
@@ -75,6 +76,7 @@ describe('POST /message with valid parameters', () => {
         expect(res.status).toEqual(200)
     })
 
+    // Tests the actual database now
     it('saves the name, message, and email to the server', async () => {
         await request(app).post('/message').type('json').send({
             name: 'AJ B.',

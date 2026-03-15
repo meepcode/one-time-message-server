@@ -6,11 +6,19 @@ const {
 } = require('express-validator')
 const messageService = require('../services/messageService')
 
+/**
+ * Returns an error string to the server with the payload, concatenating the various errors in the error array.
+ * 
+ * @param {*} res The response variable to send with
+ * @param {*} errors An array of errors, even if only one
+ * @param {*} payload The JSON data which will be sent in the case of errors, as well as an error string and a success boolean
+ * @returns Sent request
+ */
 const returnError = (res, errors, payload) => {
     let error = ''
 
     for (let i = 0; i < errors.length; i++) {
-        if (i > 0) {
+        if (i > 0) { // Add a newline if on the second error as a separator
             error += '\n'
         }
         error += errors[i]
@@ -36,6 +44,11 @@ const postMessageValidator = [
         .escape(),
 ]
 
+/**
+ * Handles POST requests to /message, including validation, generating the token and saving data to the database 
+ * 
+ * Returns an error to the client if: one of the three required parameters is not included, the name is not a string, the email is not a valid email address, or the message is greater than 250 characters.
+ */
 exports.postMessage = [
     postMessageValidator,
     async (req, res) => {
@@ -60,11 +73,19 @@ exports.postMessage = [
     },
 ]
 
+/**
+ * Validator for getMessage
+ */
 const getMessageValidator = [
     param('token')
         .isUUID().withMessage('Token in incorrect format (must be UUID)'),
 ]
 
+/**
+ * Handles the request for getting a message given a token, including validation of the token retrieving data from the server, and returning it to the callee.
+ * 
+ * Returns an error to the client if the token is not a UUID, or if messageService returns one
+ */
 exports.getMessage = [
     getMessageValidator,
     async (req, res) => {

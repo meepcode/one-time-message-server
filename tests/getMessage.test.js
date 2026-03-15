@@ -19,6 +19,8 @@ app.use('/message', messageRouter)
 jest.useFakeTimers({ advanceTimers: true })
 
 beforeEach(async () => {
+    // Before each test, mock data inserted into the database so POST doesn't have to be run for GET to be tested
+
     const client = new MongoClient(database)
     await client.connect()
     await client.db().collection('messages')
