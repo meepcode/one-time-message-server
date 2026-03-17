@@ -15,14 +15,7 @@ const messageService = require('../services/messageService')
  * @returns Sent request
  */
 const returnError = (res, errors, payload) => {
-    let error = ''
-
-    for (let i = 0; i < errors.length; i++) {
-        if (i > 0) { // Add a newline if on the second error as a separator
-            error += '\n'
-        }
-        error += errors[i]
-    }
+    let error = errors.join('\n')
 
     payload.success = false
     payload.error = error
